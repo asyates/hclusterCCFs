@@ -9,7 +9,7 @@ from matplotlib import cm
 import pandas as pd
 import numpy as np
 
-def get_DMatrix(ccfs, params, distmethod, minlagwin, maxlagwin, norm=False, sides='B'):
+def get_DMatrix(ccfs, params, distmethod, minlagwin, maxlagwin, norm=False, sides='B', dvvparams=[0.01,0.001]):
         
     if distmethod == 'euclid':
         D = compute_dmatrix_euclid(ccfs, params, minlagwin, maxlagwin, norm=norm, sides=sides) 
@@ -18,7 +18,7 @@ def get_DMatrix(ccfs, params, distmethod, minlagwin, maxlagwin, norm=False, side
         D = compute_dmatrix_cc(ccfs, params, minlagwin, maxlagwin, norm=norm, sides=sides) 
 
     elif distmethod == 'ccstretch':
-        D = compute_dmatrix_ccstretch(ccfs, params, minlagwin, maxlagwin, norm=norm, sides=sides)
+        D = compute_dmatrix_ccstretch(ccfs, params, minlagwin, maxlagwin, norm=norm, sides=sides, max_stretch=dvvparams[0], dvvstep=dvvparams[1])
 
     else:
         print('''Unrecognized clustering method, choose one of 'euclid', 'cc','ccstretch'.''') 
@@ -71,14 +71,14 @@ def compute_dmatrix_cc(ccfs, params, minlagwin, maxlagwin, norm=False, sides='B'
 
     return D
 
-def compute_dmatrix_ccstretch(ccfs, params, minlagwin, maxlagwin, norm=False, sides='B', max_stretch=0.01, step=0.0025): 
+def compute_dmatrix_ccstretch(ccfs, params, minlagwin, maxlagwin, norm=False, sides='B', max_stretch=0.01, dvvstep=0.001): 
 
     # empty array that will store max values of CC
     maxCC = np.zeros((len(ccfs), len(ccfs))) 
     dvv_array = np.zeros((len(ccfs), len(ccfs)))
 
     #create list of all stretch values to apply
-    stretch_values = np.arange(-max_stretch, max_stretch+step, step)
+    stretch_values = np.arange(-max_stretch, max_stretch+dvvstep, dvvstep)
    
     #create lag time array using sampling rate and maxlag
     fs = params.cc_sampling_rate
