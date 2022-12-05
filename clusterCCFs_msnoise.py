@@ -215,15 +215,13 @@ def getCluster(day, all_days, labels, ccfs):
         print('error: check chosen day included in cluster results')
 
     labelidx = labels[idx]
-
-    selectlabels = np.where(labels == labelidx)
-    days_cluster = all_days[selectlabels]
+    selectlabels = np.where(labels == labelidx)[0]
+    
+    days_cluster = np.array(all_days)[selectlabels]
     selectccfs = ccfs[selectlabels]
 
     return days_cluster, selectccfs
     
-
-
 def plot_interferogram(ccfs, params, days, fig=None, ax=None, ax_cb=None, maxlag=120):
 
     if ax_cb == None:
