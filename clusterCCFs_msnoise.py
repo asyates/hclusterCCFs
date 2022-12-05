@@ -206,6 +206,24 @@ def sliceCCFs(ccfs, params, minlagwin, maxlagwin, norm=False):
  
     return stack_n, stack_p 
 
+def getCluster(day, all_days, labels, ccfs):
+
+    #find index of chosen day in all days    
+    try:
+        idx = np.where(all_days == day)[0][0]
+    except:
+        print('error: check chosen day included in cluster results')
+
+    labelidx = labels[idx]
+
+    selectlabels = np.where(labels == labelidx)
+    days_cluster = all_days[selectlabels]
+    selectccfs = ccfs[selectlabels]
+
+    return days_cluster, selectccfs
+    
+
+
 def plot_interferogram(ccfs, params, days, fig=None, ax=None, ax_cb=None, maxlag=120):
 
     if ax_cb == None:
@@ -213,8 +231,8 @@ def plot_interferogram(ccfs, params, days, fig=None, ax=None, ax_cb=None, maxlag
 
     fs = params.cc_sampling_rate
     sampint = 1.0/fs
-    maxlag = params.maxlag
-    lagtimes = np.arange(-1*maxlag, maxlag+sampint, sampint)
+    maxlag_msnoise = params.maxlag
+    lagtimes = np.arange(-1*maxlag_msnoise, maxlag_msnoise+sampint, sampint)
 
 
     df = pd.DataFrame(np.array(ccfs).real.tolist(), index=days, columns=lagtimes)
