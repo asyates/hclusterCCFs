@@ -26,6 +26,30 @@ def get_DMatrix(ccfs, params, distmethod, minlagwin, maxlagwin, norm=False, side
 
     return D
 
+def get_DMatrix_spectra(spectra, distmethod, norm=False):
+
+    if distmethod == 'euclid':
+
+        D = distance.cdist(spectra, spectra, 'euclidean')
+        D = np.around(D, decimals=6) #otherwise asymmetry issues sometimes
+
+    if distmethod == 'cc':
+
+        #compute correlation coefficient matrix    
+        corr = np.corrcoef(spectra)
+        corr = (corr + corr.T)/2   # make symmetric
+        np.fill_diagonal(corr, 1)  # put 1 on the diagonal
+
+        #convert CC matrix to dissimilarity matrix
+        D = 1 - np.abs(corr)
+        D = np.around(D, decimals=6) #otherwise asymmetry issues sometimes
+
+        has_nan = np.isnan(D)
+        if has_nan.any() == True:
+            print('WARNING: NaN value in distance matrix')
+
+    return D
+
 def compute_dmatrix_euclid(ccfs, params, minlagwin, maxlagwin, norm=False, sides='B'):
     
     #get data corresponding to negative and positive lag times
