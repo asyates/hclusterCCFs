@@ -9,16 +9,16 @@ from matplotlib import cm
 import pandas as pd
 import numpy as np
 
-def get_DMatrix(ccfs, params, distmethod, minlagwin, maxlagwin, norm=False, sides='B', dvvparams=[0.01,0.001]):
+def get_DMatrix(ccfs, params, distmethod, minlagwin, maxlagwin, norm=False, sides='B', dvvparams=[0.01,0.001], absolute=True):
         
     if distmethod == 'euclid':
         D = compute_dmatrix_euclid(ccfs, params, minlagwin, maxlagwin, norm=norm, sides=sides) 
 
     elif distmethod == 'cc':
-        D = compute_dmatrix_cc(ccfs, params, minlagwin, maxlagwin, norm=norm, sides=sides) 
+        D = compute_dmatrix_cc(ccfs, params, minlagwin, maxlagwin, norm=norm, sides=sides, absolute=absolute) 
 
     elif distmethod == 'ccstretch':
-        D = compute_dmatrix_ccstretch(ccfs, params, minlagwin, maxlagwin, norm=norm, sides=sides, max_stretch=dvvparams[0], dvvstep=dvvparams[1])
+        D = compute_dmatrix_ccstretch(ccfs, params, minlagwin, maxlagwin, norm=norm, sides=sides, max_stretch=dvvparams[0], dvvstep=dvvparams[1], absolute=absolute)
 
     else:
         print('''Unrecognized clustering method, choose one of 'euclid', 'cc','ccstretch'.''') 
@@ -68,7 +68,7 @@ def compute_dmatrix_euclid(ccfs, params, minlagwin, maxlagwin, norm=False, sides
 
     return D
 
-def compute_dmatrix_cc(ccfs, params, minlagwin, maxlagwin, norm=False, sides='B'):
+def compute_dmatrix_cc(ccfs, params, minlagwin, maxlagwin, norm=False, sides='B', absolute=True):
     
     #get data corresponding to negative and positive lag times
     stack_n, stack_p = sliceCCFs(ccfs, params, minlagwin, maxlagwin, norm=norm)
@@ -86,7 +86,11 @@ def compute_dmatrix_cc(ccfs, params, minlagwin, maxlagwin, norm=False, sides='B'
     np.fill_diagonal(corr, 1)  # put 1 on the diagonal
 
     #convert CC matrix to dissimilarity matrix
-    D = 1 - np.abs(corr)
+    if absolute==True:
+        D = 1 - np.abs(corr)
+    else:
+        D = 1 - corr
+
     D = np.around(D, decimals=6) #otherwise asymmetry issues sometimes
 
     has_nan = np.isnan(D)
@@ -95,7 +99,7 @@ def compute_dmatrix_cc(ccfs, params, minlagwin, maxlagwin, norm=False, sides='B'
 
     return D
 
-def compute_dmatrix_ccstretch(ccfs, params, minlagwin, maxlagwin, norm=False, sides='B', max_stretch=0.01, dvvstep=0.001): 
+def compute_dmatrix_ccstretch(ccfs, params, minlagwin, maxlagwin, norm=False, sides='B', max_stretch=0.01, dvvstep=0.001, absolute=True): 
 
     # empty array that will store max values of CC
     maxCC = np.zeros((len(ccfs), len(ccfs))) 
@@ -154,7 +158,11 @@ def compute_dmatrix_ccstretch(ccfs, params, minlagwin, maxlagwin, norm=False, si
     
     ##convert CC matrix to dissimilarity matrix
     np.fill_diagonal(maxCC, 1)  # put 1 on the diagonal
-    D = 1 - np.abs(maxCC)
+    
+    if absolute == True:
+        D = 1 - np.abs(maxCC)
+    else:
+        D = 1 - maxCC
 
     return D
 
@@ -261,7 +269,7 @@ def plot_interferogram(ccfs, params, days, fig=None, ax=None, ax_cb=None, maxlag
     df = df.dropna()
 
     #define the 99% percentile of data for visualisation purposes
-    clim = df.mean(axis='index').quantile(0.99)
+    clim = df.mean(axis='index').quantile(0.9995)
 
     print(fig)
     print(ax)
@@ -272,6 +280,8 @@ def plot_interferogram(ccfs, params, days, fig=None, ax=None, ax_cb=None, maxlag
         plot = False
 
     img = ax.pcolormesh(df.index, df.columns, df.values.T, vmin=-clim, vmax=clim, rasterized=True,cmap='seismic')
+    #img = ax.pcolormesh(df.index, df.columns, df.values.T, rasterized=True,cmap='seismic')
+
     #fig.colorbar(img, cax=ax_cb).set_label('')
   
     
