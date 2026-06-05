@@ -3,7 +3,6 @@ from scipy.cluster import hierarchy
 from scipy.spatial.distance import squareform 
 from scipy.spatial import distance
 from scipy import interpolate
-from sklearn import preprocessing
 from matplotlib.colors import ListedColormap
 from matplotlib import cm
 import pandas as pd
@@ -103,14 +102,13 @@ def compute_dmatrix_ccstretch(ccfs, params, minlagwin, maxlagwin, norm=False, si
 
     # empty array that will store max values of CC
     maxCC = np.zeros((len(ccfs), len(ccfs))) 
-    dvv_array = np.zeros((len(ccfs), len(ccfs)))
+    #dvv_array = np.zeros((len(ccfs), len(ccfs)))
 
     #create list of all stretch values to apply
     stretch_values = np.arange(-max_stretch, max_stretch+dvvstep, dvvstep)
    
     #create lag time array using sampling rate and maxlag
     fs = params.cc_sampling_rate
-    sampint = 1.0/fs
     maxlag = params.maxlag
  
 
@@ -126,7 +124,7 @@ def compute_dmatrix_ccstretch(ccfs, params, minlagwin, maxlagwin, norm=False, si
 
     for i,ccf in enumerate(ccfs):
         CC_temp = np.zeros(len(ccfs))
-        dvv_temp = np.zeros(len(ccfs))
+        #dvv_temp = np.zeros(len(ccfs))
         for value in stretch_values:
             
             #stretch CCF i.e introduce dv/v change
@@ -146,15 +144,15 @@ def compute_dmatrix_ccstretch(ccfs, params, minlagwin, maxlagwin, norm=False, si
             
             CC_temp = np.maximum(CC_temp, CC) #maybe for this, should only be looking at positive CC values
             
-            dvv_temp = update_best_dvv(CC, CC_temp, value, dvv_temp)
+            #dvv_temp = update_best_dvv(CC, CC_temp, value, dvv_temp)
             #print(dvv_temp)
 
                 
         maxCC[i,:] = CC_temp
         maxCC[:,i] = CC_temp
 
-        dvv_array[i,:] = dvv_temp
-        dvv_array[:,i] = dvv_temp
+        #dvv_array[i,:] = dvv_temp
+        #dvv_array[:,i] = dvv_temp
     
     ##convert CC matrix to dissimilarity matrix
     np.fill_diagonal(maxCC, 1)  # put 1 on the diagonal
@@ -171,7 +169,7 @@ def update_best_dvv(corr, maxCC, stretch, dvv_array):
     for i in range(len(corr[0])):
         #print(i, corr[0][i], maxCC[0][i])
         #print(corr[0][i], maxCC[0][i])
-        if corr[0][i] == maxCC[0][i]:
+        if np.isclose(corr[0][i], maxCC[0][i]):
             dvv_array[i] = stretch
             #print(i)
     return dvv_array
@@ -243,7 +241,7 @@ def getCluster(day, all_days, labels, ccfs):
     #find index of chosen day in all days    
     try:
         idx = np.where(all_days == day)[0][0]
-    except:
+    except IndexError:
         print('error: check chosen day included in cluster results')
 
     labelidx = labels[idx]
