@@ -230,7 +230,7 @@ def sliceCCFs(ccfs, params, minlagwin, maxlagwin, norm=False):
     ccfs = np.vstack(np.array(ccfs))
       
     if norm == True: #normalise using maximum value
-        max_values = np.max(np.abs(ccf_array),axis=1) #gets max value in each row/CCF
+        max_values = np.max(np.abs(ccfs),axis=1) #gets max value in each row/CCF
         ccfs = ccfs / max_values[:,None]
 
     stack_p = ccfs[:,minidx_psnr:maxidx_psnr+1]
